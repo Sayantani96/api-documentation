@@ -1,84 +1,215 @@
 # TheMealDB API Documentation
 
-TheMealDB is a free, crowd-sourced recipe database that exposes a RESTful JSON API for searching, browsing, and filtering meals from around the world. This document covers the V1 API, which is free to use with the shared test key.
+TheMealDB provides a REST API for searching, browsing, filtering, and retrieving meal and recipe data from around the world.
 
-## Base URL
+This documentation covers the **V1 API**, which can be accessed using TheMealDB's shared test key for development and educational use.
 
-```
+## Contents
+
+- [Getting Started](#getting-started)
+  - [Base URL](#base-url)
+  - [Make Your First Request](#make-your-first-request)
+- [Authentication](#authentication)
+- [Response Format](#response-format)
+- [Endpoints](#endpoints)
+  - [Search Meal by Name](#search-meal-by-name)
+  - [List Meals by First Letter](#list-meals-by-first-letter)
+  - [Lookup Full Meal Details by ID](#lookup-full-meal-details-by-id)
+  - [Lookup a Random Meal](#lookup-a-random-meal)
+  - [List All Meal Categories](#list-all-meal-categories)
+  - [List Categories, Areas, or Ingredients](#list-categories-areas-or-ingredients)
+  - [Filter by Main Ingredient](#filter-by-main-ingredient)
+  - [Filter by Category](#filter-by-category)
+  - [Filter by Area](#filter-by-area)
+- [Images](#images)
+- [Error Handling](#error-handling)
+- [Rate Limits and Usage Notes](#rate-limits-and-usage-notes)
+- [Premium V2 Endpoints](#premium-v2-endpoints)
+- [Quick Reference](#quick-reference)
+
+---
+
+## Getting Started
+
+### Base URL
+
+All V1 API requests use the following base URL:
+
+```text
 https://www.themealdb.com/api/json/v1/1/
 ```
 
-The `1` in the path is the API key. TheMealDB provides `1` as a shared test key for development and educational use. If you plan to publish an app publicly (for example, on an app store), you're expected to become a supporter and use your own key, which unlocks the premium V2 endpoints, higher result limits, and multi-ingredient filtering.
+The `1` in the URL path is the API key. TheMealDB provides `1` as a shared test key for development and educational use.
 
-## Authentication
+If you plan to publish an application publicly, for example through an app store, TheMealDB expects you to become a supporter and use your own API key.
 
-No authentication headers or tokens are required. The API key is passed directly in the URL path. For all examples below, `1` is used as the test key.
+### Make Your First Request
 
-## Response Format
+You can make your first request without creating an account or generating an authentication token.
 
-All endpoints return JSON. A successful lookup or search returns a `meals` array containing one or more meal objects. If no results are found, the API returns:
+The following request searches for meals containing `Arrabiata` in the meal name:
 
-```json
-{ "meals": null }
+```bash
+curl "https://www.themealdb.com/api/json/v1/1/search.php?s=Arrabiata"
 ```
 
-## Endpoints
+Alternatively, send the following `GET` request using an API client such as Postman:
 
-### Search meal by name
-
-Returns all meals matching the given name.
-
-```
-GET /search.php?s={name}
-```
-
-| Parameter | Type   | Description               |
-|-----------|--------|----------------------------|
-| `s`       | string | Full or partial meal name |
-
-**Example**
-
-```
+```http
 GET https://www.themealdb.com/api/json/v1/1/search.php?s=Arrabiata
 ```
 
-### List meals by first letter
+A successful request returns a JSON response containing a `meals` array:
 
-Returns all meals whose name begins with the given letter.
-
+```json
+{
+  "meals": [
+    {
+      "idMeal": "52771",
+      "strMeal": "Spicy Arrabiata Penne"
+    }
+  ]
+}
 ```
+
+> **Note:** The actual response contains additional meal properties. The example above has been shortened for readability.
+
+If no matching meal is found, the `meals` property is `null`:
+
+```json
+{
+  "meals": null
+}
+```
+
+---
+
+## Authentication
+
+The V1 API does not require authentication headers or access tokens.
+
+The API key is included directly in the URL path:
+
+```text
+https://www.themealdb.com/api/json/v1/{api-key}/
+```
+
+All examples in this documentation use `1` as the shared test key:
+
+```text
+https://www.themealdb.com/api/json/v1/1/
+```
+
+---
+
+## Response Format
+
+TheMealDB returns responses in JSON format.
+
+A successful lookup or search returns a `meals` array containing one or more meal objects:
+
+```json
+{
+  "meals": [
+    {
+      "idMeal": "52772",
+      "strMeal": "Teriyaki Chicken Casserole"
+    }
+  ]
+}
+```
+
+If the request does not match any meals, the API returns:
+
+```json
+{
+  "meals": null
+}
+```
+
+Always check the value of the `meals` property before processing the returned data.
+
+---
+
+# Endpoints
+
+## Search Meal by Name
+
+Returns meals matching a full or partial meal name.
+
+### Request
+
+```http
+GET /search.php?s={name}
+```
+
+### Query Parameters
+
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `s` | string | Yes | Full or partial meal name |
+
+### Example Request
+
+```http
+GET https://www.themealdb.com/api/json/v1/1/search.php?s=Arrabiata
+```
+
+### Example using cURL
+
+```bash
+curl "https://www.themealdb.com/api/json/v1/1/search.php?s=Arrabiata"
+```
+
+---
+
+## List Meals by First Letter
+
+Returns all meals whose names begin with the specified letter.
+
+### Request
+
+```http
 GET /search.php?f={letter}
 ```
 
-| Parameter | Type | Description                     |
-|-----------|------|----------------------------------|
-| `f`       | char | Single letter, a through z      |
+### Query Parameters
 
-**Example**
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `f` | character | Yes | Single letter from `a` through `z` |
 
-```
+### Example Request
+
+```http
 GET https://www.themealdb.com/api/json/v1/1/search.php?f=a
 ```
 
-### Lookup full meal details by ID
+---
 
-Returns the complete recipe payload for a single meal, including ingredients, measures, instructions, and media links.
+## Lookup Full Meal Details by ID
 
-```
+Returns the complete recipe information for a single meal, including its ingredients, measurements, instructions, category, area, and available media links.
+
+### Request
+
+```http
 GET /lookup.php?i={id}
 ```
 
-| Parameter | Type   | Description   |
-|-----------|--------|----------------|
-| `i`       | string | Meal ID |
+### Query Parameters
 
-**Example**
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `i` | string | Yes | Unique meal ID |
 
-```
+### Example Request
+
+```http
 GET https://www.themealdb.com/api/json/v1/1/lookup.php?i=52772
 ```
 
-**Sample response**
+### Sample Response
 
 ```json
 {
@@ -101,169 +232,351 @@ GET https://www.themealdb.com/api/json/v1/1/lookup.php?i=52772
 }
 ```
 
-Ingredients and measures are returned as numbered fields (`strIngredient1` through `strIngredient20`, `strMeasure1` through `strMeasure20`). Unused slots return empty strings or `null`. When consuming this response, loop through the numbered pairs and stop at the first empty ingredient.
+> **Note:** The sample response has been shortened for readability.
 
-### Lookup a random meal
+### Working with Ingredients and Measurements
 
-Returns one randomly selected meal, in the same shape as the lookup response above.
+Ingredients and measurements are returned as numbered property pairs:
 
+```text
+strIngredient1
+strMeasure1
+
+strIngredient2
+strMeasure2
+
+...
+
+strIngredient20
+strMeasure20
 ```
+
+Unused ingredient and measurement fields can contain empty strings or `null`.
+
+When consuming the response, iterate through the numbered ingredient and measurement pairs and ignore empty ingredient values.
+
+---
+
+## Lookup a Random Meal
+
+Returns one randomly selected meal.
+
+The response uses the same meal object structure as the [Lookup Full Meal Details by ID](#lookup-full-meal-details-by-id) endpoint.
+
+### Request
+
+```http
 GET /random.php
 ```
 
-**Example**
+### Example Request
 
-```
+```http
 GET https://www.themealdb.com/api/json/v1/1/random.php
 ```
 
-### List all meal categories
+### Example using cURL
 
-Returns every category along with its description and thumbnail image.
-
+```bash
+curl "https://www.themealdb.com/api/json/v1/1/random.php"
 ```
+
+---
+
+## List All Meal Categories
+
+Returns all available meal categories along with their descriptions and thumbnail images.
+
+### Request
+
+```http
 GET /categories.php
 ```
 
-**Example**
+### Example Request
 
-```
+```http
 GET https://www.themealdb.com/api/json/v1/1/categories.php
 ```
 
-### List categories, areas, or ingredients
+---
 
-Returns a lightweight list of names only, useful for populating filter dropdowns or navigation.
+## List Categories, Areas, or Ingredients
 
-```
+Returns lightweight lists that can be used to populate filters, dropdown menus, or application navigation.
+
+### Requests
+
+List all categories:
+
+```http
 GET /list.php?c=list
+```
+
+List all areas:
+
+```http
 GET /list.php?a=list
+```
+
+List all ingredients:
+
+```http
 GET /list.php?i=list
 ```
 
-| Parameter | Returns                     |
-|-----------|-------------------------------|
-| `c=list`  | All category names            |
-| `a=list`  | All area (cuisine/region) names |
-| `i=list`  | All ingredient names           |
+### Query Parameters
 
-### Filter by main ingredient
+| Parameter | Returns |
+| --- | --- |
+| `c=list` | All category names |
+| `a=list` | All area or cuisine names |
+| `i=list` | All ingredient names |
 
-Returns a reduced meal list (ID, name, thumbnail only) for meals containing the given ingredient.
+---
 
-```
+## Filter by Main Ingredient
+
+Returns meals containing the specified main ingredient.
+
+### Request
+
+```http
 GET /filter.php?i={ingredient}
 ```
 
-| Parameter | Type   | Description                                 |
-|-----------|--------|----------------------------------------------|
-| `i`       | string | Ingredient name, spaces replaced with `_`   |
+### Query Parameters
 
-**Example**
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `i` | string | Yes | Ingredient name. Replace spaces with underscores (`_`) where required. |
 
-```
+### Example Request
+
+```http
 GET https://www.themealdb.com/api/json/v1/1/filter.php?i=chicken_breast
 ```
 
-### Filter by category
+Filter responses contain a reduced set of meal properties:
 
+```json
+{
+  "meals": [
+    {
+      "strMeal": "Meal name",
+      "strMealThumb": "https://example.com/image.jpg",
+      "idMeal": "12345"
+    }
+  ]
+}
 ```
+
+To retrieve the complete recipe information for a returned meal, pass its `idMeal` value to the [Lookup Full Meal Details by ID](#lookup-full-meal-details-by-id) endpoint.
+
+---
+
+## Filter by Category
+
+Returns meals belonging to the specified category.
+
+### Request
+
+```http
 GET /filter.php?c={category}
 ```
 
-**Example**
+### Query Parameters
 
-```
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `c` | string | Yes | Meal category |
+
+### Example Request
+
+```http
 GET https://www.themealdb.com/api/json/v1/1/filter.php?c=Seafood
 ```
 
-### Filter by area
+> **Note:** Filter endpoints return a reduced meal object containing `idMeal`, `strMeal`, and `strMealThumb`. Use the meal ID with the lookup endpoint to retrieve the complete recipe.
 
-```
+---
+
+## Filter by Area
+
+Returns meals associated with the specified cuisine or geographical area.
+
+### Request
+
+```http
 GET /filter.php?a={area}
 ```
 
-**Example**
+### Query Parameters
 
-```
+| Parameter | Type | Required | Description |
+| --- | --- | --- | --- |
+| `a` | string | Yes | Cuisine or geographical area |
+
+### Example Request
+
+```http
 GET https://www.themealdb.com/api/json/v1/1/filter.php?a=Canadian
 ```
 
-> Filter endpoints return a stripped-down object (`idMeal`, `strMeal`, `strMealThumb`). To get full recipe details, follow up with a `lookup.php?i={id}` call.
+> **Note:** To retrieve complete recipe information for a returned meal, use its `idMeal` value with the [Lookup Full Meal Details by ID](#lookup-full-meal-details-by-id) endpoint.
 
-## Images
+---
 
-### Meal thumbnails
+# Images
+
+## Meal Thumbnails
+
+Meal objects can contain a `strMealThumb` property containing the URL of the meal image.
 
 Meal images support size variants by appending a path segment to the base image URL:
 
-```
+```text
 {strMealThumb}/small
 {strMealThumb}/medium
 {strMealThumb}/large
 ```
 
-### Ingredient thumbnails
+## Ingredient Thumbnails
 
-Ingredient images follow a predictable naming pattern based on the ingredient name, with spaces replaced by underscores:
+Ingredient images follow a predictable URL structure based on the ingredient name.
 
-```
+```text
 https://www.themealdb.com/images/ingredients/{ingredient}.png
+```
+
+Size variants are also available:
+
+```text
 https://www.themealdb.com/images/ingredients/{ingredient}-small.png
 https://www.themealdb.com/images/ingredients/{ingredient}-medium.png
 https://www.themealdb.com/images/ingredients/{ingredient}-large.png
 ```
 
-## Premium (V2) Endpoints
-
-Supporters get access to a beta V2 API at a separate base URL:
-
-```
-https://www.themealdb.com/api/json/v2/{key}/
-```
-
-V2 unlocks:
-
-- **Random selection** (`randomselection.php`) — returns 10 random meals in one call instead of one
-- **Latest meals** (`latest.php`) — returns the most recently added meals
-- **Multi-ingredient filtering** (`filter.php?i=chicken_breast,garlic,salt`) — filter by more than one ingredient at once
-- Higher result limits (the free tier caps list-style responses at 100 items)
-- Ability to submit your own meals and images
-
-These are not available on the free test key and require a supporter key issued after signing up.
-
-## Error Handling
-
-TheMealDB doesn't use conventional HTTP error codes for "no results" cases. Instead, check the response body:
-
-| Response                  | Meaning                                  |
-|----------------------------|--------------------------------------------|
-| `{"meals": null}`          | No matches found for the query           |
-| `{"meals": [...]}`         | One or more results returned             |
-
-Always null-check the `meals` field before iterating over it, rather than relying on the HTTP status code alone.
-
-## Rate Limits and Usage Notes
-
-- The free test key (`1`) is intended for development, learning, and personal projects.
-- Publicly released apps (app store listings, production traffic) require a supporter key.
-- List-style endpoints on the free tier are capped at 100 results.
-- There's no published hard rate limit for the free tier, but excessive automated traffic may be throttled. Cache responses where practical rather than re-fetching on every request.
-
-## Quick Reference
-
-| Task                          | Endpoint                              |
-|-------------------------------|-----------------------------------------|
-| Search by name                | `search.php?s={name}`                  |
-| Search by first letter        | `search.php?f={letter}`               |
-| Full meal lookup              | `lookup.php?i={id}`                   |
-| Random meal                   | `random.php`                          |
-| All categories                | `categories.php`                      |
-| List category/area/ingredient names | `list.php?c=list` / `?a=list` / `?i=list` |
-| Filter by ingredient          | `filter.php?i={ingredient}`           |
-| Filter by category            | `filter.php?c={category}`             |
-| Filter by area                | `filter.php?a={area}`                 |
+Replace spaces in ingredient names with underscores where required.
 
 ---
 
-*Documentation based on TheMealDB's public V1 API. Source: [themealdb.com/api.php](https://www.themealdb.com/api.php)*
+# Error Handling
+
+TheMealDB does not use conventional HTTP error responses to indicate every "no results" scenario.
+
+For search and lookup requests, check the response body to determine whether matching meals were found.
+
+| Response | Meaning |
+| --- | --- |
+| `{"meals": null}` | No matching meals were found |
+| `{"meals": [...]}` | One or more meals were returned |
+
+For example:
+
+```json
+{
+  "meals": null
+}
+```
+
+Always check whether the `meals` property is `null` before attempting to iterate through the returned data.
+
+---
+
+# Rate Limits and Usage Notes
+
+Keep the following considerations in mind when using the V1 API:
+
+- The shared test key (`1`) is intended for development, learning, and personal projects.
+- Publicly released applications require a supporter key.
+- List-style responses on the free tier are capped at 100 results.
+- TheMealDB does not publish a hard rate limit for the free tier.
+- Excessive automated traffic may be throttled.
+
+Where appropriate, cache responses instead of repeatedly requesting data that does not change frequently.
+
+---
+
+# Premium V2 Endpoints
+
+TheMealDB supporters can access the V2 API using a supporter key.
+
+### Base URL
+
+```text
+https://www.themealdb.com/api/json/v2/{key}/
+```
+
+V2 provides additional functionality, including:
+
+- **Random selection** — returns multiple random meals in a single request.
+- **Latest meals** — returns recently added meals.
+- **Multi-ingredient filtering** — filters meals using multiple ingredients.
+- Higher result limits.
+- Ability to submit meals and images.
+
+### Random Selection
+
+```http
+GET /randomselection.php
+```
+
+Returns 10 random meals in a single request.
+
+### Latest Meals
+
+```http
+GET /latest.php
+```
+
+Returns recently added meals.
+
+### Multi-Ingredient Filtering
+
+```http
+GET /filter.php?i=chicken_breast,garlic,salt
+```
+
+Filters meals using multiple ingredients.
+
+> **Note:** V2 endpoints are not available using the shared V1 test key. A supporter key is required.
+
+---
+
+# Quick Reference
+
+| Task | Endpoint |
+| --- | --- |
+| Search by meal name | `search.php?s={name}` |
+| Search by first letter | `search.php?f={letter}` |
+| Get complete meal details | `lookup.php?i={id}` |
+| Get a random meal | `random.php` |
+| List all categories | `categories.php` |
+| List category names | `list.php?c=list` |
+| List area names | `list.php?a=list` |
+| List ingredient names | `list.php?i=list` |
+| Filter by ingredient | `filter.php?i={ingredient}` |
+| Filter by category | `filter.php?c={category}` |
+| Filter by area | `filter.php?a={area}` |
+
+---
+
+## About This Documentation Sample
+
+This documentation is an **independent technical writing portfolio project** created using TheMealDB's publicly available API.
+
+It demonstrates API documentation practices including:
+
+- Developer onboarding
+- REST endpoint documentation
+- Request and response examples
+- Query parameter documentation
+- cURL examples
+- JSON response documentation
+- Error-handling guidance
+- Cross-referencing and documentation navigation
+
+This is **not official TheMealDB documentation**.
+
+For official API information, refer to [TheMealDB API documentation](https://www.themealdb.com/api.php).
